@@ -1,0 +1,218 @@
+[
+  {
+    "Priority": "Must have",
+    "Risk": "High",
+    "Confidence": "No data",
+    "Size": "Large",
+    "Timing": "Quarter start",
+    "Recommendation": "UX research & A/B test"
+  },
+  {
+    "Priority": "Must have",
+    "Risk": "High",
+    "Confidence": "Inconclusive data",
+    "Size": "Large",
+    "Timing": "Quarter start",
+    "Recommendation": "UX research & A/B test"
+  },
+  {
+    "Priority": "Must have",
+    "Risk": "High",
+    "Confidence": "Conclusive data",
+    "Size": "Large",
+    "Timing": "Quarter start",
+    "Recommendation": "Monitor with Analytics"
+  },
+  {
+    "Priority": "Must have",
+    "Risk": "Medium",
+    "Confidence": "No data",
+    "Size": "Medium",
+    "Timing": "Quarter half",
+    "Recommendation": "Exploratory research"
+  },
+  {
+    "Priority": "Must have",
+    "Risk": "Medium",
+    "Confidence": "Inconclusive data",
+    "Size": "Medium",
+    "Timing": "Quarter half",
+    "Recommendation": "UX research & A/B test"
+  },
+  {
+    "Priority": "Must have",
+    "Risk": "Medium",
+    "Confidence": "Conclusive data",
+    "Size": "Medium",
+    "Timing": "Quarter half",
+    "Recommendation": "Monitor with Analytics"
+  },
+  {
+    "Priority": "Must have",
+    "Risk": "Low",
+    "Confidence": "No data",
+    "Size": "Small",
+    "Timing": "Quarter end",
+    "Recommendation": "Exploratory research"
+  },
+  {
+    "Priority": "Must have",
+    "Risk": "Low",
+    "Confidence": "Inconclusive data",
+    "Size": "Small",
+    "Timing": "Quarter end",
+    "Recommendation": "Unmoderated test"
+  },
+  {
+    "Priority": "Must have",
+    "Risk": "Low",
+    "Confidence": "Conclusive data",
+    "Size": "Small",
+    "Timing": "Quarter end",
+    "Recommendation": "Monitor with Analytics"
+  },
+  {
+    "Priority": "Should have",
+    "Risk": "High",
+    "Confidence": "No data",
+    "Size": "Large",
+    "Timing": "Quarter start",
+    "Recommendation": "UX research & A/B test"
+  },
+  {
+    "Priority": "Should have",
+    "Risk": "High",
+    "Confidence": "Inconclusive data",
+    "Size": "Large",
+    "Timing": "Quarter start",
+    "Recommendation": "UX research & A/B test"
+  },
+  {
+    "Priority": "Should have",
+    "Risk": "High",
+    "Confidence": "Conclusive data",
+    "Size": "Large",
+    "Timing": "Quarter start",
+    "Recommendation": "Pre-post analysis"
+  },
+  {
+    "Priority": "Should have",
+    "Risk": "Medium",
+    "Confidence": "No data",
+    "Size": "Medium",
+    "Timing": "Quarter half",
+    "Recommendation": "Exploratory research"
+  },
+  {
+    "Priority": "Should have",
+    "Risk": "Medium",
+    "Confidence": "Inconclusive data",
+    "Size": "Medium",
+    "Timing": "Quarter half",
+    "Recommendation": "Unmoderated test"
+  },
+  {
+    "Priority": "Should have",
+    "Risk": "Medium",
+    "Confidence": "Conclusive data",
+    "Size": "Medium",
+    "Timing": "Quarter half",
+    "Recommendation": "Monitor with Analytics"
+  },
+  {
+    "Priority": "Should have",
+    "Risk": "Low",
+    "Confidence": "No data",
+    "Size": "Small",
+    "Timing": "Quarter end",
+    "Recommendation": "Exploratory research"
+  },
+  {
+    "Priority": "Should have",
+    "Risk": "Low",
+    "Confidence": "Inconclusive data",
+    "Size": "Small",
+    "Timing": "Quarter end",
+    "Recommendation": "Unmoderated test"
+  },
+  {
+    "Priority": "Should have",
+    "Risk": "Low",
+    "Confidence": "Conclusive data",
+    "Size": "Small",
+    "Timing": "Quarter end",
+    "Recommendation": "Monitor with Analytics"
+  },
+  {
+    "Priority": "Nice to have",
+    "Risk": "High",
+    "Confidence": "No data",
+    "Size": "Large",
+    "Timing": "Quarter start",
+    "Recommendation": "Exploratory research"
+  },
+  {
+    "Priority": "Nice to have",
+    "Risk": "High",
+    "Confidence": "Inconclusive data",
+    "Size": "Large",
+    "Timing": "Quarter start",
+    "Recommendation": "Pre-post analysis"
+  },
+  {
+    "Priority": "Nice to have",
+    "Risk": "High",
+    "Confidence": "Conclusive data",
+    "Size": "Large",
+    "Timing": "Quarter start",
+    "Recommendation": "Monitor with Analytics"
+  },
+  {
+    "Priority": "Nice to have",
+    "Risk": "Medium",
+    "Confidence": "No data",
+    "Size": "Medium",
+    "Timing": "Quarter half",
+    "Recommendation": "Exploratory research"
+  },
+  {
+    "Priority": "Nice to have",
+    "Risk": "Medium",
+    "Confidence": "Inconclusive data",
+    "Size": "Medium",
+    "Timing": "Quarter half",
+    "Recommendation": "Unmoderated test"
+  },
+  {
+    "Priority": "Nice to have",
+    "Risk": "Medium",
+    "Confidence": "Conclusive data",
+    "Size": "Medium",
+    "Timing": "Quarter half",
+    "Recommendation": "Monitor with Analytics"
+  },
+  {
+    "Priority": "Nice to have",
+    "Risk": "Low",
+    "Confidence": "No data",
+    "Size": "Small",
+    "Timing": "Quarter end",
+    "Recommendation": "Monitor with Analytics"
+  },
+  {
+    "Priority": "Nice to have",
+    "Risk": "Low",
+    "Confidence": "Inconclusive data",
+    "Size": "Small",
+    "Timing": "Quarter end",
+    "Recommendation": "Monitor with Analytics"
+  },
+  {
+    "Priority": "Nice to have",
+    "Risk": "Low",
+    "Confidence": "Conclusive data",
+    "Size": "Small",
+    "Timing": "Quarter end",
+    "Recommendation": "Monitor with Analytics"
+  }
+]
