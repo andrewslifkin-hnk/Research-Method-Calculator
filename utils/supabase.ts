@@ -149,3 +149,20 @@ export async function saveFeaturesToSupabase(features: Feature[]) {
     throw error
   }
 }
+
+// Helper function to get all features from Supabase
+export async function getFeaturesFromSupabase() {
+  try {
+    const supabase = getSupabaseClient()
+    const { data, error } = await supabase.from("features").select("*").order("name", { ascending: true })
+    if (error) throw error
+    return {
+      data: data || [],
+      success: true,
+      source: "supabase",
+    }
+  } catch (error) {
+    console.error("Failed to get features from Supabase:", error)
+    throw error
+  }
+}
