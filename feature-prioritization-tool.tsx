@@ -42,6 +42,8 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { fetchMatrixData, getRecommendation, getUniqueValues, type MatrixDataRow } from "./utils/matrix-service"
 import Link from "next/link"
+import { saveFeaturesToSupabase } from "@/utils/supabase"
+import { toast } from "@/hooks/use-toast"
 
 interface Feature {
   name: string
@@ -51,6 +53,7 @@ interface Feature {
   data: string
   size: string
   timing: string
+  recommendation: string
 }
 
 interface RecommendationResult {
@@ -159,6 +162,7 @@ export default function FeaturePrioritizationTool() {
     data: "",
     size: "",
     timing: "",
+    recommendation: "",
   })
   const [recommendations, setRecommendations] = useState<RecommendationResult | null>(null)
   const [showRecommendations, setShowRecommendations] = useState(false)
@@ -320,7 +324,7 @@ export default function FeaturePrioritizationTool() {
     }
   }
 
-  const handleAnalyzeFeature = () => {
+  const handleAnalyzeFeature = async () => {
     if (currentFeature.name.trim() === "") {
       alert("Please enter a feature name")
       return
@@ -340,13 +344,35 @@ export default function FeaturePrioritizationTool() {
       return
     }
 
-    const newFeatures = [...features, { ...currentFeature }]
-    setFeatures(newFeatures)
-
     // Calculate recommendations
     const result = getFeatureRecommendations(currentFeature)
     setRecommendations(result)
     setShowRecommendations(true)
+
+    // Save to Supabase via API route
+    try {
+      const newFeatureWithRecommendation = {
+        ...currentFeature,
+        recommendation: result.methods.join(", ")
+      }
+      const newFeatures = [...features, newFeatureWithRecommendation]
+      setFeatures(newFeatures)
+      const response = await fetch("/api/features", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ features: newFeatures }),
+      })
+      const apiResult = await response.json()
+      if (!apiResult.success) {
+        throw new Error(apiResult.error || "Unknown error")
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to save feature",
+        description: "Could not save feature to Supabase. Please try again later.",
+        variant: "destructive",
+      })
+    }
 
     // Scroll to recommendations
     setTimeout(() => {
@@ -364,6 +390,7 @@ export default function FeaturePrioritizationTool() {
       data: "",
       size: "",
       timing: "",
+      recommendation: "",
     })
     setShowRecommendations(false)
     setRecommendations(null)
@@ -479,7 +506,7 @@ export default function FeaturePrioritizationTool() {
         </CardHeader>
         <CardContent className="p-6">
           {error && (
-            <Alert variant="warning" className="mb-4">
+            <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Note</AlertTitle>
               <AlertDescription>{error}</AlertDescription>

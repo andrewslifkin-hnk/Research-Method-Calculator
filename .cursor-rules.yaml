@@ -1,0 +1,76 @@
+# .cursor-rules.yaml
+
+# General
+ignore:
+  - node_modules/
+  - .next/
+  - .git/
+  - .vercel/
+  - pnpm-lock.yaml
+  - public/
+  - styles/
+  - README.md
+
+# TypeScript
+typescript:
+  strict: true
+  noImplicitAny: true
+  noUnusedLocals: true
+  noUnusedParameters: true
+  noFallthroughCasesInSwitch: true
+
+# React
+react:
+  functionComponentNaming: PascalCase
+  preferFunctionComponents: true
+  hooksRules: true
+  jsxFilenameExtensions: [".tsx"]
+  noInlineStyles: true
+  noDangerouslySetInnerHTML: true
+
+# Next.js
+nextjs:
+  useAppDir: true
+  useFileBasedRouting: true
+  preferServerComponents: false
+  noClientSideDataFetchingInServerComponents: true
+
+# Styling
+tailwind:
+  enforceClassOrder: true
+  noArbitraryValues: false
+
+# Linting
+eslint:
+  extends:
+    - next/core-web-vitals
+    - plugin:react/recommended
+    - plugin:@typescript-eslint/recommended
+  rules:
+    react/react-in-jsx-scope: off
+    @typescript-eslint/explicit-module-boundary-types: off
+
+# Testing (if/when added)
+testing:
+  preferTestingLibrary: true
+  testFilePattern: "**/*.test.{ts,tsx}"
+
+# File organization
+fileStructure:
+  groupByFeature: true
+  keepUtilsSeparate: true
+  keepContextsSeparate: true
+  keepHooksSeparate: true
+  keepComponentsSeparate: true
+
+# Documentation
+documentation:
+  requireJsDoc: false
+  requireReadme: true
+
+# Misc
+misc:
+  preferNamedExports: true
+  noDefaultExportInComponents: true
+  noConsole: warn
+  noDebugger: error

@@ -3,6 +3,18 @@ import { createClient } from "@supabase/supabase-js"
 // Type for our matrix data
 export type MatrixDataRow = Record<string, string>
 
+// Type for feature entries
+export interface Feature {
+  name: string
+  priority: string
+  risk: string
+  confidence: string
+  data: string
+  size: string
+  timing: string
+  recommendation: string
+}
+
 // Create a single instance of the Supabase client for the browser
 let supabaseClient: ReturnType<typeof createClient> | null = null
 
@@ -117,6 +129,23 @@ export async function saveMatrixDataToSupabase(data: MatrixDataRow[]) {
     }
   } catch (error) {
     console.error("Failed to save data to Supabase:", error)
+    throw error
+  }
+}
+
+// Helper function to save feature entries to Supabase
+export async function saveFeaturesToSupabase(features: Feature[]) {
+  try {
+    const supabase = getServerSupabaseClient()
+    // Insert new feature entries
+    const { error } = await supabase.from("features").insert(features)
+    if (error) throw error
+    return {
+      success: true,
+      message: "Features saved to Supabase successfully",
+    }
+  } catch (error) {
+    console.error("Failed to save features to Supabase:", error)
     throw error
   }
 }
