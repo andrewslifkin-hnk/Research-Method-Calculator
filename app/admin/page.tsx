@@ -599,7 +599,7 @@ export default function AdminPage() {
                             selectedFeatures.includes(feature.name) ? "border-primary/50 bg-primary/5" : "border-border hover:border-gray-300"
                           }`}
                         >
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                               <Checkbox 
                                 checked={selectedFeatures.includes(feature.name)}
@@ -609,12 +609,12 @@ export default function AdminPage() {
                               <h3 className="font-medium text-base">{feature.name}</h3>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge variant={getBadgeVariant(feature.priority)}>
+                              <Badge className="bg-red-500 hover:bg-red-600 text-white font-medium rounded-full px-3 py-0.5 text-xs">
                                 {feature.priority.includes("Must") ? "Must have" : feature.priority}
                               </Badge>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-gray-100">
                                     <MoreHorizontal className="h-4 w-4" />
                                     <span className="sr-only">Actions</span>
                                   </Button>
@@ -639,50 +639,65 @@ export default function AdminPage() {
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                            <div>
-                              <span className="text-xs text-muted-foreground font-medium">Risk</span>
-                              <div className="flex items-center gap-1 mt-1">
+                          <div className="grid grid-cols-6 gap-6">
+                            <div className="flex flex-col">
+                              <span className="text-xs font-medium text-gray-500 mb-1.5">Risk</span>
+                              <div className="flex items-center gap-1.5">
                                 {getOptionIcon("risk", feature.risk)}
-                                <Badge variant={getBadgeVariant(feature.risk)}>
-                                  {feature.risk}
-                                </Badge>
+                                {feature.risk === "High" ? (
+                                  <Badge className="bg-red-100 text-red-700 hover:bg-red-100 hover:text-red-700 font-medium border-0">
+                                    {feature.risk}
+                                  </Badge>
+                                ) : feature.risk === "Medium" ? (
+                                  <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 hover:text-orange-700 font-medium border-0">
+                                    {feature.risk}
+                                  </Badge>
+                                ) : (
+                                  <Badge className="bg-green-100 text-green-700 hover:bg-green-100 hover:text-green-700 font-medium border-0">
+                                    {feature.risk}
+                                  </Badge>
+                                )}
                               </div>
                             </div>
-                            <div>
-                              <span className="text-xs text-muted-foreground font-medium">Confidence</span>
-                              <div className="flex items-center gap-1 mt-1">
+                            
+                            <div className="flex flex-col">
+                              <span className="text-xs font-medium text-gray-500 mb-1.5">Confidence</span>
+                              <div className="flex items-center gap-1.5">
                                 {getOptionIcon("confidence", feature.confidence)}
                                 <span className="text-sm">{feature.confidence}</span>
                               </div>
                             </div>
-                            <div>
-                              <span className="text-xs text-muted-foreground font-medium">Data</span>
-                              <div className="flex items-center gap-1 mt-1">
+                            
+                            <div className="flex flex-col">
+                              <span className="text-xs font-medium text-gray-500 mb-1.5">Data</span>
+                              <div className="flex items-center gap-1.5">
                                 {getOptionIcon("data", feature.data)}
                                 <span className="text-sm">{feature.data}</span>
                               </div>
                             </div>
-                            <div>
-                              <span className="text-xs text-muted-foreground font-medium">Size</span>
-                              <div className="flex items-center gap-1 mt-1">
+                            
+                            <div className="flex flex-col">
+                              <span className="text-xs font-medium text-gray-500 mb-1.5">Size</span>
+                              <div className="flex items-center gap-1.5">
                                 {getOptionIcon("size", feature.size)}
                                 <span className="text-sm">{feature.size}</span>
                               </div>
                             </div>
-                            <div>
-                              <span className="text-xs text-muted-foreground font-medium">Timing</span>
-                              <div className="flex items-center gap-1 mt-1">
+                            
+                            <div className="flex flex-col">
+                              <span className="text-xs font-medium text-gray-500 mb-1.5">Timing</span>
+                              <div className="flex items-center gap-1.5">
                                 {getOptionIcon("timing", feature.timing)}
                                 <span className="text-sm">{feature.timing}</span>
                               </div>
                             </div>
-                            <div>
-                              <span className="text-xs text-muted-foreground font-medium">Recommendation</span>
-                              <div className="flex items-center gap-1 mt-1">
-                                <Badge variant="outline" className="text-xs font-normal normal-case">
+                            
+                            <div className="flex flex-col">
+                              <span className="text-xs font-medium text-gray-500 mb-1.5">Recommendation</span>
+                              <div className="flex items-center">
+                                <span className="text-sm max-w-[250px] truncate" title={feature.recommendation}>
                                   {feature.recommendation}
-                                </Badge>
+                                </span>
                               </div>
                             </div>
                           </div>
