@@ -316,26 +316,27 @@ export default function AdminPage() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-gray-50 text-neutral-900">
-        <Sidebar>
-          <SidebarBody className="justify-between gap-10">
-            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-              <div className="mt-8 flex flex-col gap-2">
-                {sidebarLinks.map((link, idx) => (
-                  <SidebarLink key={idx} link={link} />
-                ))}
+      <div className="min-h-screen bg-gray-50 text-neutral-900 flex">
+        <div className="sticky top-0 h-screen">
+          <Sidebar className="h-full">
+            <SidebarBody className="h-full flex-col justify-between">
+              <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+                <div className="mt-8 flex flex-col gap-2">
+                  {sidebarLinks.map((link, idx) => (
+                    <SidebarLink key={idx} link={link} />
+                  ))}
+                </div>
+                
+                <div className="mt-auto pt-8 border-t border-neutral-200 my-4">
+                  {navigationLinks.map((link, idx) => (
+                    <SidebarLink key={idx} link={link} />
+                  ))}
+                </div>
               </div>
-              
-              {/* Add separator and back to app navigation */}
-              <div className="mt-auto pt-8 border-t border-neutral-200 my-4">
-                {navigationLinks.map((link, idx) => (
-                  <SidebarLink key={idx} link={link} />
-                ))}
-              </div>
-            </div>
-          </SidebarBody>
-        </Sidebar>
-        <main className="flex-1 min-h-screen">
+            </SidebarBody>
+          </Sidebar>
+        </div>
+        <main className="flex-1 min-h-screen overflow-y-auto">
           <div className="max-w-7xl mx-auto p-4 md:p-8">
             <div className="flex justify-between items-center mb-8">
               <h1 className="text-2xl font-bold">Admin Dashboard</h1>
