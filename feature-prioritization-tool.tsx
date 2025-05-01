@@ -38,12 +38,14 @@ import {
   CalendarCheck,
   Database,
   Settings,
+  Info,
 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { fetchMatrixData, getRecommendation, getUniqueValues, type MatrixDataRow } from "./utils/matrix-service"
 import Link from "next/link"
 import { saveFeaturesToSupabase } from "@/utils/supabase"
 import { toast } from "@/hooks/use-toast"
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 interface Feature {
   name: string
@@ -178,6 +180,30 @@ export default function FeaturePrioritizationTool() {
   const [dataOptions, setDataOptions] = useState<string[]>([])
   const [sizeOptions, setSizeOptions] = useState<string[]>([])
   const [timingOptions, setTimingOptions] = useState<string[]>([])
+
+  const [openInfo, setOpenInfo] = useState<null | "risk" | "confidence" | "data">(null);
+
+  const riskInfo = (
+    <ul className="list-disc pl-4 space-y-2 text-foreground">
+      <li><b>High</b> – Not implementing the feature can cause major user frustration, revenue loss, or reputational damage.</li>
+      <li><b>Medium</b> – Moderate consequences if the feature fails. May affect some users or KPIs but is recoverable.</li>
+      <li><b>Low</b> – Minimal impact. Low user exposure, minimal cost to reverse, or minor relevance to core goals.</li>
+    </ul>
+  );
+  const confidenceInfo = (
+    <ul className="list-disc pl-4 space-y-2 text-foreground">
+      <li><b>No data</b> – No prior data or research available.</li>
+      <li><b>Inconclusive data</b> – Existing data (quantitative or qualitative) is conflicting, partial or inconclusive. Not enough to make a decision.</li>
+      <li><b>Conclusive data</b> – Strong evidence from past quantitative and/or qualitative tests, analytics or user research supports the decision. High confidence in user value and impact.</li>
+    </ul>
+  );
+  const dataInfo = (
+    <ul className="list-disc pl-4 space-y-2 text-foreground">
+      <li><b>Qualitative Research</b> – Insights from interviews, surveys, usability tests, market benchmark, etc. Focus on user behavior and motivations.</li>
+      <li><b>Quantitative Research</b> – Data from experiments (A/B tests), analytics, and behavioral metrics.</li>
+      <li><b>Mixed Methods</b> – A combination of qualitative and quantitative approaches. Useful when both depth and scale of insight are needed.</li>
+    </ul>
+  );
 
   // Check if confidence is "No data"
   const isNoDataConfidence = currentFeature.confidence && currentFeature.confidence.toLowerCase().includes("no data")
@@ -547,10 +573,24 @@ export default function FeaturePrioritizationTool() {
                 </div>
               </div>
 
+              {/* Risk Section with Info Dialog */}
               <div>
                 <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-orange-500" />
                   Risk
+                  <Dialog open={openInfo === "risk"} onOpenChange={open => setOpenInfo(open ? "risk" : null)}>
+                    <DialogTrigger asChild>
+                      <button type="button" className="ml-1 text-muted-foreground hover:text-primary" aria-label="Risk info">
+                        <Info className="h-4 w-4" />
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Risk Levels</DialogTitle>
+                      </DialogHeader>
+                      {riskInfo}
+                    </DialogContent>
+                  </Dialog>
                 </h2>
                 <p className="text-muted-foreground mb-4">What level of risk does this feature carry?</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -566,10 +606,24 @@ export default function FeaturePrioritizationTool() {
                 </div>
               </div>
 
+              {/* Confidence Section with Info Dialog */}
               <div>
                 <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
                   <Gauge className="h-5 w-5 text-blue-500" />
                   Confidence
+                  <Dialog open={openInfo === "confidence"} onOpenChange={open => setOpenInfo(open ? "confidence" : null)}>
+                    <DialogTrigger asChild>
+                      <button type="button" className="ml-1 text-muted-foreground hover:text-primary" aria-label="Confidence info">
+                        <Info className="h-4 w-4" />
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Confidence Levels</DialogTitle>
+                      </DialogHeader>
+                      {confidenceInfo}
+                    </DialogContent>
+                  </Dialog>
                 </h2>
                 <p className="text-muted-foreground mb-4">How confident are you in the data you have?</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -585,11 +639,24 @@ export default function FeaturePrioritizationTool() {
                 </div>
               </div>
 
-              {/* Data Type section - show all options but disable invalid ones */}
+              {/* Data Type Section with Info Dialog */}
               <div>
                 <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
                   <Database className="h-5 w-5 text-blue-500" />
                   Data Type
+                  <Dialog open={openInfo === "data"} onOpenChange={open => setOpenInfo(open ? "data" : null)}>
+                    <DialogTrigger asChild>
+                      <button type="button" className="ml-1 text-muted-foreground hover:text-primary" aria-label="Data type info">
+                        <Info className="h-4 w-4" />
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Data Types</DialogTitle>
+                      </DialogHeader>
+                      {dataInfo}
+                    </DialogContent>
+                  </Dialog>
                 </h2>
                 <p className="text-muted-foreground mb-4">
                   {isNoDataConfidence
@@ -601,7 +668,7 @@ export default function FeaturePrioritizationTool() {
                         : "What type of data is available for this feature?"}
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {dataOptions.map((option) => (
+                  {dataOptions.filter(option => option !== 'N/A').map((option) => (
                     <SelectionCard
                       key={option}
                       icon={getOptionIcon("data", option)}
