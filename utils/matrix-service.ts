@@ -20,42 +20,103 @@ export const getSupabaseClient = () => {
     return supabaseClient
   }
 
-  throw new Error("Supabase client could not be initialized. Missing environment variables.")
+  // Provide more detailed error message about which variables are missing
+  const missingVars = []
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) missingVars.push("NEXT_PUBLIC_SUPABASE_URL")
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) missingVars.push("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+  
+  const errorMsg = `Supabase client could not be initialized. Missing environment variables: ${missingVars.join(", ")}. 
+  Make sure to create a .env.local file with these variables.`
+  
+  // Log to console but don't throw an error
+  console.warn(errorMsg)
+  
+  // Return a dummy client that won't throw errors
+  return {
+    from: (table: string) => ({
+      select: (columns: string) => ({
+        order: (column: string, { ascending }: { ascending?: boolean } = { ascending: true }) => {
+          // Return a Promise-like object that resolves immediately with empty data
+          return Promise.resolve({
+            data: [],
+            error: {
+              message: errorMsg
+            }
+          })
+        },
+        eq: () => ({
+          single: () => Promise.resolve({
+            data: null, 
+            error: {
+              message: errorMsg,
+              code: "dummy_error"
+            }
+          })
+        })
+      }),
+      upsert: () => Promise.resolve({
+        data: null,
+        error: {
+          message: errorMsg
+        }
+      }),
+      insert: () => Promise.resolve({
+        data: null,
+        error: {
+          message: errorMsg
+        }
+      }),
+      delete: () => Promise.resolve({
+        data: null,
+        error: {
+          message: errorMsg
+        }
+      })
+    })
+  } as any
 }
 
-// Fetch matrix data from Supabase
+// Fetch matrix data from API (which uses Supabase server-side)
 export async function fetchMatrixData() {
   try {
-    const supabase = getSupabaseClient()
+    // Try to fetch from API first (which will check Supabase server-side)
+    console.log("Fetching matrix data from API...")
+    const response = await fetch("/api/matrix", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store", // Don't cache the response
+    })
 
-    // Get the matrix data
-    const { data, error } = await supabase.from("matrix_data").select("*").order("id", { ascending: true })
-
-    if (error) throw error
-
-    // Calculate metadata
-    const rowCount = data?.length || 0
-    const columnCount = data && data.length > 0 ? Object.keys(data[0]).length : 0
-
-    return {
-      success: true,
-      data: data || [],
-      lastUpdated: new Date().toISOString(),
-      rowCount,
-      columnCount,
-      source: "supabase",
+    if (response.ok) {
+      const result = await response.json()
+      console.log("API response:", { source: result.source, dataCount: result.data?.length })
+      
+      if (result.data && result.data.length > 0) {
+        return {
+          success: true,
+          data: result.data,
+          lastUpdated: result.lastUpdated || new Date().toISOString(),
+          rowCount: result.data.length,
+          columnCount: result.data.length > 0 ? Object.keys(result.data[0]).length : 0,
+          source: result.source || "api",
+        }
+      }
+    } else {
+      console.warn("API request failed:", response.status, response.statusText)
     }
-  } catch (error) {
-    console.error("Failed to fetch matrix data:", error)
 
-    // Try to load from localStorage as fallback
-    try {
-      if (typeof window !== "undefined") {
+    // If API fails, try to load from localStorage as fallback
+    console.log("API failed, trying localStorage...")
+    if (typeof window !== "undefined") {
+      try {
         const dataString = localStorage.getItem("feature-matrix-data")
         const lastUpdated = localStorage.getItem("feature-matrix-last-updated")
 
         if (dataString) {
           const data = JSON.parse(dataString)
+          console.log("Using data from localStorage:", data.length, "rows")
           return {
             success: true,
             data: data,
@@ -65,21 +126,66 @@ export async function fetchMatrixData() {
             source: "localStorage",
           }
         }
+      } catch (localError) {
+        console.error("Failed to load from localStorage:", localError)
       }
-    } catch (localError) {
-      console.error("Failed to load from localStorage:", localError)
     }
 
     // Return embedded data as final fallback
-    const embeddedData = require("@/data/matrix-data.json")
-    return {
-      success: true,
-      data: embeddedData,
-      lastUpdated: new Date().toISOString(),
-      rowCount: embeddedData.length,
-      columnCount: embeddedData.length > 0 ? Object.keys(embeddedData[0]).length : 0,
-      source: "embedded_data_fallback",
-      error: `Failed to fetch matrix data: ${error instanceof Error ? error.message : "Unknown error"}`,
+    console.log("No localStorage data, using embedded fallback")
+    try {
+      const embeddedData = require("@/data/matrix-data.json")
+      console.log("Using embedded fallback data:", embeddedData.length, "rows")
+      return {
+        success: true,
+        data: embeddedData,
+        lastUpdated: new Date().toISOString(),
+        rowCount: embeddedData.length,
+        columnCount: embeddedData.length > 0 ? Object.keys(embeddedData[0]).length : 0,
+        source: "embedded_data_fallback",
+        error: "API and localStorage unavailable",
+      }
+    } catch (embeddedError) {
+      console.error("Failed to load embedded data:", embeddedError)
+      // Return an empty dataset as last resort
+      return {
+        success: false,
+        data: [],
+        lastUpdated: new Date().toISOString(),
+        rowCount: 0,
+        columnCount: 0,
+        source: "empty_fallback",
+        error: "All data sources failed. No matrix data available.",
+      }
+    }
+  } catch (unexpectedError) {
+    // This catch handles any unexpected errors in our code
+    console.error("Unexpected error in fetchMatrixData:", unexpectedError)
+    
+    // Return embedded data as final fallback for unexpected errors
+    try {
+      const embeddedData = require("@/data/matrix-data.json")
+      console.log("Using embedded fallback data after unexpected error:", embeddedData.length, "rows")
+      return {
+        success: true,
+        data: embeddedData,
+        lastUpdated: new Date().toISOString(),
+        rowCount: embeddedData.length,
+        columnCount: embeddedData.length > 0 ? Object.keys(embeddedData[0]).length : 0,
+        source: "embedded_data_fallback",
+        error: unexpectedError instanceof Error ? unexpectedError.message : "Unknown error",
+      }
+    } catch (embeddedError) {
+      // Return an empty dataset as absolute last resort
+      return {
+        success: false,
+        data: [],
+        lastUpdated: new Date().toISOString(),
+        rowCount: 0,
+        columnCount: 0,
+        source: "empty_fallback",
+        error: "All data sources failed. No matrix data available.",
+      }
     }
   }
 }

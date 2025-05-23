@@ -4,12 +4,12 @@ import { useAuth } from "@/contexts/auth-context"
 import AdminLogin from "@/components/admin-login"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, LogOut, Edit, Save, X, Filter, Download, Upload, Trash2, Check, ChevronDown, ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
+import { ArrowLeft, LogOut, Edit, Save, X, Filter, Download, Upload, Trash2, Check, ChevronDown, ChevronLeft, ChevronRight, MoreHorizontal, Database as DatabaseIcon } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Sidebar, SidebarBody, SidebarLink, SidebarProvider } from "@/components/ui/sidebar"
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
 import { useRouter } from "next/navigation"
-import { getFeaturesFromSupabase, Feature, saveFeaturesToSupabase } from "@/utils/supabase"
+import { Feature } from "@/utils/supabase"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -123,12 +123,12 @@ function getOptionIcon(category: string, option: string): React.ReactNode {
 
   // Data type icons
   if (category === "data") {
-    if (option === "N/A") return <Database className="h-4 w-4 text-gray-400" />
+    if (option === "N/A") return <DatabaseIcon className="h-4 w-4 text-gray-400" />
     if (option.toLowerCase().includes("qualitative") && option.toLowerCase().includes("quantitative"))
-      return <Database className="h-4 w-4 text-blue-500" />
-    if (option.toLowerCase().includes("qualitative")) return <Database className="h-4 w-4 text-indigo-500" />
-    if (option.toLowerCase().includes("quantitative")) return <Database className="h-4 w-4 text-purple-500" />
-    return <Database className="h-4 w-4 text-blue-500" />
+      return <DatabaseIcon className="h-4 w-4 text-blue-500" />
+    if (option.toLowerCase().includes("qualitative")) return <DatabaseIcon className="h-4 w-4 text-indigo-500" />
+    if (option.toLowerCase().includes("quantitative")) return <DatabaseIcon className="h-4 w-4 text-purple-500" />
+    return <DatabaseIcon className="h-4 w-4 text-blue-500" />
   }
 
   // Size icons
@@ -167,6 +167,7 @@ export default function AdminPage() {
   const [features, setFeatures] = useState<Feature[]>([])
   const [loadingFeatures, setLoadingFeatures] = useState(false)
   const [sidebarTab, setSidebarTab] = useState<'dashboard' | 'settings'>('dashboard')
+  const [featuresError, setFeaturesError] = useState<string | null>(null)
   
   // Bulk edit state
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
@@ -204,25 +205,58 @@ export default function AdminPage() {
 
   const loadFeatures = async () => {
     setLoadingFeatures(true)
+    setFeaturesError(null)
     try {
-      const result = await getFeaturesFromSupabase()
-      if (result.success) {
-        // Ensure each feature matches the Feature type
-        setFeatures(
-          (result.data as any[]).map((f) => ({
-            name: f.name || "",
-            priority: f.priority || "",
-            risk: f.risk || "",
-            confidence: f.confidence || "",
-            data: f.data || "",
-            size: f.size || "",
-            timing: f.timing || "",
-            recommendation: f.recommendation || "",
-          }))
-        )
+      // Use the API endpoint instead of client-side function
+      const response = await fetch("/api/features", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        
+        if (result.success && result.features) {
+          console.log("Loaded features from API:", { 
+            source: result.source, 
+            count: result.count 
+          })
+          
+          // Map the features data to match our Feature type
+          setFeatures(
+            result.features.map((f: any) => ({
+              name: f.name || "",
+              priority: f.priority || "",
+              risk: f.risk || "",
+              confidence: f.confidence || "",
+              data: f.data || "",
+              size: f.size || "",
+              timing: f.timing || "",
+              recommendation: f.recommendation || "",
+            }))
+          )
+          
+          // Show warning if database is empty
+          if (result.count === 0) {
+            setFeaturesError(
+              "No features found in database. Click 'Seed Features' to populate with sample data."
+            )
+          }
+        } else {
+          setFeaturesError("Failed to load features from API")
+        }
+      } else {
+        const errorData = await response.json()
+        setFeaturesError(`API error: ${errorData.error || "Unknown error"}`)
       }
     } catch (err) {
-      console.error("Error fetching features:", err)
+      console.error("Error loading features:", err)
+      setFeaturesError(
+        "Error loading features. Please check your database connection."
+      )
     } finally {
       setLoadingFeatures(false)
     }
@@ -260,18 +294,70 @@ export default function AdminPage() {
         return feature
       })
 
-      // Save all features back to the database
-      await saveFeaturesToSupabase(updatedFeatures)
-      setFeatures(updatedFeatures)
-      setSelectedFeatures([])
-      setBulkEditData({})
-      setEditDialogOpen(false)
-      setShowSuccess(true)
-      setTimeout(() => setShowSuccess(false), 3000)
+      // Save all features back to the database using API
+      const response = await fetch("/api/features", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ features: updatedFeatures }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        
+        if (result.success) {
+          // Update UI on success
+          setFeatures(updatedFeatures)
+          setSelectedFeatures([])
+          setBulkEditData({})
+          setEditDialogOpen(false)
+          setShowSuccess(true)
+          setTimeout(() => setShowSuccess(false), 3000)
+        } else {
+          setFeaturesError(`Failed to save features: ${result.error}`)
+        }
+      } else {
+        const errorData = await response.json()
+        setFeaturesError(`API error saving features: ${errorData.error || "Unknown error"}`)
+      }
     } catch (error) {
       console.error("Error saving bulk edits:", error)
+      setFeaturesError("Unexpected error saving features. Check your database connection.")
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const seedFeatures = async () => {
+    setLoadingFeatures(true)
+    try {
+      const response = await fetch("/api/seed-features", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          setShowSuccess(true)
+          setTimeout(() => setShowSuccess(false), 3000)
+          // Reload features after seeding
+          await loadFeatures()
+        } else {
+          setFeaturesError(`Failed to seed features: ${result.error}`)
+        }
+      } else {
+        const errorData = await response.json()
+        setFeaturesError(`API error seeding features: ${errorData.error || "Unknown error"}`)
+      }
+    } catch (error) {
+      console.error("Error seeding features:", error)
+      setFeaturesError("Unexpected error seeding features. Check your database connection.")
+    } finally {
+      setLoadingFeatures(false)
     }
   }
 
@@ -358,6 +444,21 @@ export default function AdminPage() {
               </div>
             )}
             
+            {featuresError && (
+              <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded mb-4 flex items-center justify-between">
+                <div className="flex items-center">
+                  <AlertTriangle className="h-5 w-5 mr-2" />
+                  <span>
+                    {featuresError} Make sure to run "Setup Database" first and check that your
+                    Supabase environment variables are set correctly in .env.local
+                  </span>
+                </div>
+                <button onClick={() => setFeaturesError(null)} className="text-yellow-800">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+            
             <Card className="shadow border border-neutral-200 bg-white mb-8">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
@@ -381,6 +482,24 @@ export default function AdminPage() {
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>Refresh features</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={seedFeatures}
+                            disabled={loadingFeatures}
+                          >
+                            <DatabaseIcon className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Seed Features</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>

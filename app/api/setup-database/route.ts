@@ -51,6 +51,25 @@ export async function POST() {
       console.error("Error creating matrix_metadata table:", metaError)
       throw metaError
     }
+    
+    // NEW CODE: Create features table with sample data
+    const { error: featuresError } = await supabase.from("features").upsert([
+      {
+        name: "Sample Feature",
+        priority: "Must have",
+        risk: "Medium",
+        confidence: "Conclusive data",
+        data: "Qualitative and/or Quantitative Data",
+        size: "M",
+        timing: "Start",
+        recommendation: "Quantitative A/B Test and/or Deep Qualitative Research",
+      },
+    ])
+
+    if (featuresError) {
+      console.error("Error creating features table:", featuresError)
+      throw featuresError
+    }
 
     return NextResponse.json({
       success: true,

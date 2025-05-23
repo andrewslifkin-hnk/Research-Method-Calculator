@@ -31,6 +31,8 @@ import { fetchMatrixData, setMatrixData, EMBEDDED_MATRIX_DATA, updateMatrixData 
 import { isSupabaseAvailable } from "@/utils/supabase"
 import { SharedDataNotice } from "../app/admin/shared-data-notice"
 import SeedDatabase from "../app/admin/matrix/seed-database"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type Step = "upload" | "preview" | "save" | "success"
 
@@ -48,6 +50,8 @@ export default function MatrixAdminContent() {
   const [csvUrl, setCsvUrl] = useState<string>("")
   const [supabaseAvailable, setSupabaseAvailable] = useState<boolean>(false)
   const [dataSource, setDataSource] = useState<string | null>(null)
+  const [showMatrixDialog, setShowMatrixDialog] = useState(false)
+  const [currentMatrixData, setCurrentMatrixData] = useState<any[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
@@ -76,6 +80,7 @@ export default function MatrixAdminContent() {
         if (result.success) {
           setLastUpdated(result.lastUpdated || null)
           setDataSource(result.source || null)
+          setCurrentMatrixData(result.data || [])
         }
       })
       .catch((err) => {
@@ -338,6 +343,7 @@ Nice to have,Low,Conclusive data,Small,Quarter end,Monitor with Analytics`
         setSuccess("Matrix data refreshed successfully")
         setLastUpdated(result.lastUpdated || null)
         setDataSource(result.source || null)
+        setCurrentMatrixData(result.data || [])
 
         // If we have data, set it to the parsed data for preview
         if (result.data && result.data.length > 0) {
@@ -405,6 +411,21 @@ Nice to have,Low,Conclusive data,Small,Quarter end,Monitor with Analytics`
 
   const triggerFileInput = () => {
     fileInputRef.current?.click()
+  }
+
+  const handleViewCurrentMatrix = () => {
+    setIsLoading(true)
+    fetchMatrixData()
+      .then((result) => {
+        setCurrentMatrixData(result.data || [])
+        setShowMatrixDialog(true)
+        setIsLoading(false)
+      })
+      .catch((err) => {
+        console.error("Error fetching matrix data:", err)
+        setError("Error loading current matrix data")
+        setIsLoading(false)
+      })
   }
 
   const renderStepIndicator = () => {
@@ -508,7 +529,34 @@ Nice to have,Low,Conclusive data,Small,Quarter end,Monitor with Analytics`
             <p className="text-muted-foreground mb-4">
               You can seed the database with the default matrix data or reset it to its initial state.
             </p>
-            <SeedDatabase />
+            <div className="flex flex-col space-y-4">
+              <SeedDatabase />
+              <Button 
+                variant="outline" 
+                onClick={handleViewCurrentMatrix}
+                className="flex items-center gap-2"
+              >
+                <Eye className="h-4 w-4" />
+                View Current Matrix Data
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {!supabaseAvailable && (
+          <div className="border rounded-md p-4 bg-gray-50">
+            <h3 className="text-lg font-medium mb-2">Local Matrix Data</h3>
+            <p className="text-muted-foreground mb-4">
+              Supabase is not available. Matrix data is stored locally only.
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={handleViewCurrentMatrix}
+              className="flex items-center gap-2"
+            >
+              <Eye className="h-4 w-4" />
+              View Current Matrix Data
+            </Button>
           </div>
         )}
 
@@ -873,6 +921,47 @@ Nice to have,Low,Conclusive data,Small,Quarter end,Monitor with Analytics`
       {currentStep === "upload" && renderUploadStep()}
       {currentStep === "preview" && renderPreviewStep()}
       {currentStep === "success" && renderSuccessStep()}
+
+      {/* Matrix Data Dialog */}
+      <Dialog open={showMatrixDialog} onOpenChange={setShowMatrixDialog}>
+        <DialogContent className="max-w-4xl max-h-screen">
+          <DialogHeader>
+            <DialogTitle>Current Matrix Data</DialogTitle>
+            <DialogDescription>
+              Source: {dataSource || 'Unknown'} | Last Updated: {lastUpdated ? new Date(lastUpdated).toLocaleString() : 'Unknown'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ScrollArea className="h-[60vh]">
+            {currentMatrixData.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {Object.keys(currentMatrixData[0]).map((key) => (
+                      <TableHead key={key}>{key}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentMatrixData.map((row, index) => (
+                    <TableRow key={index}>
+                      {Object.values(row).map((value, i) => (
+                        <TableCell key={i}>{String(value)}</TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="p-4 text-center text-muted-foreground">No matrix data available</div>
+            )}
+          </ScrollArea>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowMatrixDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

@@ -215,7 +215,7 @@ export default function FeaturePrioritizationTool() {
       try {
         const result = await fetchMatrixData()
 
-        if (result.success && result.data.length > 0) {
+        if (result.success && result.data && result.data.length > 0) {
           setMatrixData(result.data)
           setLastUpdated(result.lastUpdated)
 
@@ -227,7 +227,12 @@ export default function FeaturePrioritizationTool() {
           setSizeOptions(getUniqueValues(result.data, "Size"))
           setTimingOptions(getUniqueValues(result.data, "Timing"))
 
-          setError(null)
+          // Show a warning if using fallback data
+          if (result.source !== "supabase") {
+            setError(`Using ${result.source} data instead of the database. Check your Supabase configuration.`)
+          } else {
+            setError(null)
+          }
         } else {
           // Use fallback data if API fails
           setMatrixData(FALLBACK_DATA)
@@ -240,7 +245,10 @@ export default function FeaturePrioritizationTool() {
           setSizeOptions(getUniqueValues(FALLBACK_DATA, "Size"))
           setTimingOptions(getUniqueValues(FALLBACK_DATA, "Timing"))
 
-          setError("Could not load matrix data from server. Using fallback data.")
+          const errorMessage = result.error ? 
+            `Could not load matrix data: ${result.error}. Using fallback data.` : 
+            "Could not load matrix data from server. Using fallback data."
+          setError(errorMessage)
         }
       } catch (err) {
         console.error("Error loading matrix data:", err)
@@ -256,7 +264,10 @@ export default function FeaturePrioritizationTool() {
         setSizeOptions(getUniqueValues(FALLBACK_DATA, "Size"))
         setTimingOptions(getUniqueValues(FALLBACK_DATA, "Timing"))
 
-        setError("Error loading matrix data. Using fallback data.")
+        const errorMessage = err instanceof Error ? 
+          `Error loading matrix data: ${err.message}. Using fallback data.` : 
+          "Unknown error loading matrix data. Using fallback data."
+        setError(errorMessage)
       } finally {
         setIsLoading(false)
       }

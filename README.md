@@ -1,30 +1,59 @@
-# Research Method Tool
+# Research Method Calculator
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+A tool for calculating and visualizing research method recommendations.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/andrews-projects-39b35781/v0-random)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/P5uaynulol9)
+## Setup Instructions
 
-## Overview
+### 1. Environment Variables
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+Create a `.env.local` file in the root directory with the following variables:
 
-## Deployment
+```
+# Supabase credentials (required for features to display in admin dashboard)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-public-anon-key
 
-Your project is live at:
+# Server-side Supabase credentials (used for admin operations)
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
 
-**[https://vercel.com/andrews-projects-39b35781/v0-random](https://vercel.com/andrews-projects-39b35781/v0-random)**
+Replace the placeholder values with your actual Supabase project credentials.
 
-## Build your app
+### 2. Supabase Setup
 
-Continue building your app on:
+1. Create a new project on [Supabase](https://supabase.com/) if you haven't already
+2. Get your project URL and keys from the project settings
+3. After the application is running, visit the admin page and click "Setup Database" to create the necessary tables
 
-**[https://v0.dev/chat/projects/P5uaynulol9](https://v0.dev/chat/projects/P5uaynulol9)**
+### 3. Development
 
-## How It Works
+```bash
+# Install dependencies
+npm install
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+# Run the development server
+npm run dev
+```
+
+## Features
+
+- Feature matrix calculation and visualization
+- Admin dashboard for managing feature data
+- CSV import functionality
+- Responsive design
+
+## Troubleshooting
+
+### Features not showing in Admin Dashboard
+
+If features are not showing in the admin dashboard:
+
+1. Make sure your `.env.local` file has the correct Supabase credentials
+2. Click the "Setup Database" button on the admin page to create the necessary tables
+3. Check the browser console for any error messages
+4. Verify that the "features" table exists in your Supabase project
+
+## License
+
+[MIT License](LICENSE)

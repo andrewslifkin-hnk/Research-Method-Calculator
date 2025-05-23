@@ -1,33 +1,44 @@
 import { NextResponse } from "next/server"
 import { EMBEDDED_MATRIX_DATA } from "@/matrix-data"
-import { getMatrixDataFromSupabase, saveMatrixDataToSupabase, isSupabaseAvailable } from "@/utils/supabase"
+import { getServerSupabaseClient } from "@/utils/supabase"
 
 // GET handler to retrieve the matrix data
 export async function GET() {
   try {
-    // First try to get data from Supabase
-    const supabaseAvailable = await isSupabaseAvailable().catch(() => false)
+    // First try to get data from Supabase using server client
+    try {
+      const supabase = getServerSupabaseClient()
+      
+      // Test connection with a simple query
+      const { data, error } = await supabase.from("matrix_data").select("*").order("id", { ascending: true })
 
-    if (supabaseAvailable) {
-      try {
-        const supabaseData = await getMatrixDataFromSupabase()
+      if (!error && data && data.length > 0) {
+        console.log("Using Supabase data:", data.length, "rows")
+        
+        // Get the last updated timestamp
+        const { data: metaData } = await supabase
+          .from("matrix_metadata")
+          .select("last_updated")
+          .eq("id", 1)
+          .single()
 
-        if (supabaseData.data && supabaseData.data.length > 0) {
-          console.log("Using Supabase data:", supabaseData.data.length, "rows")
-          return NextResponse.json({
-            data: supabaseData.data,
-            success: true,
-            lastUpdated: supabaseData.lastUpdated,
-            source: "supabase",
-          })
-        }
-      } catch (supabaseError) {
-        console.error("Error retrieving data from Supabase:", supabaseError)
-        // Continue to fallback
+        return NextResponse.json({
+          data: data,
+          success: true,
+          lastUpdated: metaData?.last_updated || new Date().toISOString(),
+          source: "supabase",
+        })
+      } else if (error) {
+        console.warn("Supabase query error:", error.message)
+      } else {
+        console.log("No data found in Supabase")
       }
+    } catch (supabaseError) {
+      console.error("Error connecting to Supabase:", supabaseError)
     }
 
     // If Supabase is not available or has no data, return embedded data
+    console.log("Falling back to embedded data")
     return NextResponse.json({
       data: EMBEDDED_MATRIX_DATA,
       success: true,
@@ -75,36 +86,45 @@ export async function POST(request: Request) {
       )
     }
 
-    // Try to save to Supabase
-    const supabaseAvailable = await isSupabaseAvailable().catch(() => false)
+    // Try to save to Supabase using server client
+    try {
+      const supabase = getServerSupabaseClient()
+      const now = new Date().toISOString()
 
-    if (supabaseAvailable) {
-      try {
-        const result = await saveMatrixDataToSupabase(body.data)
+      // First, delete all existing data
+      const { error: deleteError } = await supabase.from("matrix_data").delete().neq("id", 0)
 
-        return NextResponse.json({
-          success: true,
-          message: "Matrix data saved to Supabase successfully",
-          lastUpdated: result.lastUpdated,
-          source: "supabase",
-        })
-      } catch (supabaseError) {
-        console.error("Failed to save to Supabase:", supabaseError)
-        // Fall back to returning success with a warning
-        return NextResponse.json({
-          success: true,
-          message: "Matrix data saved to browser storage only",
-          warning: `Failed to save to Supabase: ${supabaseError instanceof Error ? supabaseError.message : "Unknown error"}. Data is only stored in your browser.`,
-          lastUpdated: new Date().toISOString(),
-          source: "localStorage_only",
-        })
+      if (deleteError) {
+        throw new Error(`Delete error: ${deleteError.message}`)
       }
-    } else {
-      // Supabase not available, but we'll still save to localStorage on the client
+
+      // Then insert the new data
+      const { error: insertError } = await supabase.from("matrix_data").insert(
+        body.data.map((row: any, index: number) => ({
+          ...row,
+          id: index + 1,
+        })),
+      )
+
+      if (insertError) {
+        throw new Error(`Insert error: ${insertError.message}`)
+      }
+
+      // Update the last_updated timestamp
+      await supabase.from("matrix_metadata").upsert({ id: 1, last_updated: now })
+
+      return NextResponse.json({
+        success: true,
+        message: "Matrix data saved to Supabase successfully",
+        lastUpdated: now,
+        source: "supabase",
+      })
+    } catch (supabaseError) {
+      console.error("Failed to save to Supabase:", supabaseError)
       return NextResponse.json({
         success: true,
         message: "Matrix data saved to browser storage only",
-        warning: "Supabase is not available. Data is only stored in your browser.",
+        warning: `Failed to save to Supabase: ${supabaseError instanceof Error ? supabaseError.message : "Unknown error"}. Data is only stored in your browser.`,
         lastUpdated: new Date().toISOString(),
         source: "localStorage_only",
       })
